@@ -25,7 +25,7 @@ Set your OpenAI API key in a `.env` file (copy from `.env.example`):
 OPENAI_API_KEY=sk-your-key-here
 ```
 
-### Indexing
+### Build index
 
 Build the vector index from policy documents:
 
@@ -34,3 +34,25 @@ python -m rag.ingest --rebuild
 ```
 
 Use `--rebuild` to delete the existing index and re-index from scratch. Without it, new documents are added to the existing index.
+
+### Run server
+
+```bash
+uvicorn app.main:app --reload
+```
+
+### Test retrieval
+
+Verify retrieval (uses OpenAI for query embedding; requires index and OPENAI_API_KEY):
+
+```bash
+python -m rag.query "PTO carryover"
+```
+
+### Test chat
+
+With the server running, test the chat endpoint (PowerShell):
+
+```powershell
+curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d "{\"question\": \"How many PTO days can I carry over?\"}"
+```
