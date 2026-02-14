@@ -17,6 +17,9 @@ COLLECTION_NAME = "policies"
 SNIPPET_CHARS = 300
 EMBED_MODEL = "text-embedding-3-small"
 
+# Refusal threshold: best (lowest) distance above this = weak evidence, refuse
+DISTANCE_REFUSE_THRESHOLD = 1.2
+
 
 def _clean_whitespace(text: str) -> str:
     """Collapse whitespace to single spaces and strip."""
@@ -104,4 +107,7 @@ def should_refuse(results: list[dict]) -> tuple[bool, str]:
     combined_len = sum(len(r.get("text", "")) for r in results)
     if combined_len < 800:
         return True, "Retrieved content too short to answer reliably."
+    best_distance = min(r.get("distance", float("inf")) for r in results)
+    if best_distance > DISTANCE_REFUSE_THRESHOLD:
+        return True, "No sufficiently relevant policy documents found."
     return False, ""

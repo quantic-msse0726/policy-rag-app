@@ -23,7 +23,11 @@ def main() -> None:
     results = retrieve(question, k=5)
 
     print(f"Query: {question}\n")
-    print(f"Retrieved {len(results)} chunks:\n")
+    if results:
+        best_dist = min(r.get("distance", float("inf")) for r in results)
+        print(f"Retrieved {len(results)} chunks (best distance: {best_dist:.4f})\n")
+    else:
+        print(f"Retrieved 0 chunks\n")
 
     for i, r in enumerate(results, 1):
         title = r.get("title", "")
