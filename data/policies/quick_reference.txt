@@ -1,0 +1,26 @@
+QUICK REFERENCE - Key Policy Points
+====================================
+
+All content is synthetic. For full details, see individual policy documents.
+
+PTO: 15-25 days/year by tenure. Request 14 days ahead. Carryover: 5 days max.
+  Bereavement: 5 days. Parental: 12 weeks primary, 2 weeks secondary.
+
+REMOTE: Core hours 10am-2pm local. VPN required. Company equipment. Hybrid: 2-3 days/week.
+
+EXPENSES: Submit within 30 days. Receipts over $25. Manager approval over $500.
+  Economy flights; $250/night domestic lodging. Per diem: $50 domestic, $75 intl.
+
+SECURITY: MFA required. Encrypt devices. Report incidents in 24 hours.
+  Annual training mandatory. References Acceptable Use and Confidentiality policies.
+
+AUP: Business use; minimal personal use OK. No illegal content, malware, resource abuse.
+  References Information Security and Code of Conduct.
+
+CODE OF CONDUCT: Integrity, Respect, Accountability. Report violations to HR or Ethics Hotline.
+
+EQUIPMENT: Company devices only for work. Return on separation. Report loss immediately.
+
+TERMINATION: 2 weeks notice typical. Return equipment. Access revoked in 24 hours.
+
+Contact: HR hr@company.com | IT helpdesk | Ethics Hotline | Security security@company.com

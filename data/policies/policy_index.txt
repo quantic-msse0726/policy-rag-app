@@ -1,0 +1,46 @@
+POLICY INDEX - Company Policy Corpus
+====================================
+
+All content in this corpus is synthetic and created for demonstration purposes.
+Safe for use in repositories and RAG applications.
+
+Target size: ~50 pages total across all documents.
+
+FILES AND FORMATS
+-----------------
+
+Markdown (.md) - 14 files:
+  1. acceptable_use_policy.md
+  2. benefits_overview.md
+  3. code_of_conduct.md
+  4. confidentiality_nda.md
+  5. diversity_inclusion.md
+  6. equipment_assets.md
+  7. expenses_policy.md
+  8. harassment_complaints.md
+  9. information_security_policy.md
+  10. onboarding.md
+  11. performance_review.md
+  12. pto_policy.md
+  13. remote_work_policy.md
+  14. termination.md
+
+Plain text (.txt) - 2 files:
+  15. policy_index.txt (this file)
+  16. quick_reference.txt
+
+HTML (.html) - 2 files:
+  17. code_of_conduct.html
+  18. pto_policy.html
+
+PDF (.pdf) - 1 file:
+  19. expenses_policy.pdf (generated from expenses_policy.md)
+
+CROSS-REFERENCES
+---------------
+- Information Security Policy references Acceptable Use Policy, Confidentiality and NDA
+- Remote Work Policy references Information Security, Equipment and Asset Management
+- Code of Conduct references Harassment Prevention, Confidentiality, Acceptable Use
+
+For full details, refer to the individual policy documents.
+Questions: HR (hr@company.com) or the intranet policy hub.

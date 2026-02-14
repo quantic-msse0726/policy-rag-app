@@ -1,3 +1,10 @@
 fastapi
 uvicorn[standard]
 python-dotenv
+openai
+chromadb
+tiktoken
+pypdf
+numpy
+reportlab
+beautifulsoup4
