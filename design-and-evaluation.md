@@ -19,10 +19,6 @@
 - **Answerable**: `citation_ok` = grounded_ok AND answer includes at least one quoted phrase (`"..."`) that is an exact substring (after whitespace normalization) of at least one cited source. Quoted phrases must have length ≥20 characters or ≥5 words to avoid trivial matches.
 - **Unanswerable**: `citation_ok` = same as grounded_ok (no citations/snippets, refusal wording).
 
-**Limitation**
-
-Exact-substring matching may fail on minor paraphrases or formatting differences; it avoids spurious matches from generic phrase overlap.
-
 **Metrics**
 
 - **Groundedness %**: `grounded_ok` count / total × 100
@@ -35,6 +31,19 @@ Exact-substring matching may fail on minor paraphrases or formatting differences
 # Server must be running: uvicorn app.main:app --reload
 python -m eval.run_eval
 ```
+
+### What You Measured
+
+- **What**: Groundedness (citations present and properly cited), citation accuracy (quoted phrase matches a cited source), and latency.
+- **How**: Automated evaluation against 25 curated questions (18 answerable, 7 unanswerable). Each response is scored for bracket citations, quoted-phrase overlap, and refusal wording where appropriate.
+- **Why quote injection improves citation accuracy**:
+  - The Quote line is injected from retrieved evidence, so it is always verifiable.
+  - The model is instructed not to produce its own quotes to avoid paraphrased "fake quotes."
+  - Sentence splitting avoids decimals so accrual statements (e.g., "1.67 days") remain intact.
+
+**Limitation**
+
+Heuristic evaluation depends on overlap/substring checks and may not capture all paraphrases.
 
 ### Corpus Size
 
@@ -49,6 +58,6 @@ python -m eval.run_eval
 | Metric | Value |
 |--------|-------|
 | Groundedness % | 100.0 |
-| Citation accuracy % | 80.0 |
-| Latency p50 (ms) | 2862 |
-| Latency p95 (ms) | 4358 |
+| Citation accuracy % | 100.0 |
+| Latency p50 (ms) | 2859 |
+| Latency p95 (ms) | 3716 |
