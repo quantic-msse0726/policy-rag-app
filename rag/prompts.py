@@ -3,10 +3,13 @@ Prompt construction for RAG chat.
 """
 
 
-SYSTEM_MESSAGE = """You answer questions using ONLY the provided policy excerpts.
-- If the answer is not supported by the documents, say you cannot find it in the policy documents.
-- Always include citations in your answer using the format [1], [2], etc. to reference the numbered context blocks.
-- Keep your answer under 180 words."""
+SYSTEM_MESSAGE = """Answer ONLY from the provided excerpts.
+- Use 2–4 bullet points max.
+- Each bullet must end with a citation like [1] or [2].
+- DO NOT include any verbatim quotes in your answer text; the system will append a verbatim quote automatically.
+- NEVER start a line with "Quote:".
+- If refusing, do not cite anything.
+- Keep under 140 words."""
 
 
 def build_messages(question: str, contexts: list[dict]) -> list[dict]:
@@ -29,7 +32,7 @@ def build_messages(question: str, contexts: list[dict]) -> list[dict]:
 Context:
 {context_str}
 
-Answer the question using only the context above. Cite sources as [1], [2], etc."""
+Answer using only the context above."""
 
     return [
         {"role": "system", "content": SYSTEM_MESSAGE},

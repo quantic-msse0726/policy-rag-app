@@ -8,3 +8,4 @@ pypdf
 numpy
 reportlab
 beautifulsoup4
+requests
