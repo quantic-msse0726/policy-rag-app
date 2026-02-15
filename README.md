@@ -1,7 +1,8 @@
 # Policy RAG App
 
 [![CI](https://github.com/quantic-msse0726/policy-rag-app/actions/workflows/ci.yml/badge.svg)](https://github.com/quantic-msse0726/policy-rag-app/actions/workflows/ci.yml)
-[![Live App](https://img.shields.io/website?url=https%3A%2F%2Fpolicy-rag-app.onrender.com%2Fhealth&up_message=live&down_message=down&label=render&style=flat-square)](https://policy-rag-app.onrender.com/)
+[![Live Demo](https://img.shields.io/badge/live-demo-3B8EA5?style=flat-square)](https://policy-rag-app.onrender.com/)
+[![Uptime Status](https://img.shields.io/badge/uptime-status%20page-2F6F9F?style=flat-square)](https://stats.uptimerobot.com/EhIcAe5nKS)
 [![Python](https://img.shields.io/badge/python-3.11-2F4F90?logo=python&logoColor=white&style=flat-square)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/fastapi-api-0E7C86?logo=fastapi&logoColor=white&style=flat-square)](https://fastapi.tiangolo.com/)
 [![Chroma](https://img.shields.io/badge/chroma-vector%20db-4A5BCF?style=flat-square)](https://www.trychroma.com/)
