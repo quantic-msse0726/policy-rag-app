@@ -1,5 +1,13 @@
 # Policy RAG App
 
+[![CI](https://github.com/quantic-msse0726/policy-rag-app/actions/workflows/ci.yml/badge.svg)](https://github.com/quantic-msse0726/policy-rag-app/actions/workflows/ci.yml)
+[![Live App](https://img.shields.io/website?url=https%3A%2F%2Fpolicy-rag-app.onrender.com%2Fhealth&up_message=live&down_message=down&label=render&style=flat-square)](https://policy-rag-app.onrender.com/)
+[![Python](https://img.shields.io/badge/python-3.11-2F4F90?logo=python&logoColor=white&style=flat-square)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/fastapi-api-0E7C86?logo=fastapi&logoColor=white&style=flat-square)](https://fastapi.tiangolo.com/)
+[![Chroma](https://img.shields.io/badge/chroma-vector%20db-4A5BCF?style=flat-square)](https://www.trychroma.com/)
+[![OpenAI](https://img.shields.io/badge/openai-llm-2F2F2F?logo=openai&logoColor=white&style=flat-square)](https://platform.openai.com/)
+[![Render](https://img.shields.io/badge/render-deploy-3B8EA5?logo=render&logoColor=white&style=flat-square)](https://render.com/)
+
 End-to-end Retrieval-Augmented Generation (RAG) application for answering company policy questions with citations.
 
 ## Project Summary
@@ -189,7 +197,7 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT
 - Health check path: `/health`
 - Required env var: `OPENAI_API_KEY`
 
-If Render defaults to Python 3.14+, deploy can fail in `chromadb`/`pydantic.v1`. This repo pins Python to 3.11 via `render.yaml` and `runtime.txt`.
+If Render defaults to Python 3.14+, deploy can fail in `chromadb`/`pydantic.v1`. This repo pins Python to 3.11 via `render.yaml` and `.python-version`.
 
 After deploy, validate:
 
@@ -197,7 +205,7 @@ After deploy, validate:
 2. `https://<your-service>.onrender.com/`
 3. Ask a sample question and confirm citations/snippets in response
 
-See `deployed.md` for live URL and deploy evidence fields.
+See `docs/deployed.md` for live URL and deploy evidence fields.
 
 ## CI/CD
 
@@ -224,10 +232,10 @@ Optional deploy-on-main:
 
 - Code and docs: this repository
 - Setup and run guide: `README.md`
-- Design and evaluation summary: `design-and-evaluation.md`
-- Metric definitions: `EVALUATION.md`
-- AI tooling disclosure: `ai-tooling.md`
-- Deployment notes: `deployed.md`
+- Design and evaluation summary: `docs/design-and-evaluation.md`
+- Metric definitions: `docs/EVALUATION.md`
+- AI tooling disclosure: `docs/ai-tooling.md`
+- Deployment notes: `docs/deployed.md`
 
 ## Troubleshooting
 

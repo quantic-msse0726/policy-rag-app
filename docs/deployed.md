@@ -2,8 +2,8 @@
 
 ## Live App
 
-- Public URL: `ADD_RENDER_URL_HERE`
-- Screenshot path: `docs/render-live.png` (add after first successful deploy)
+- Public URL: `https://policy-rag-app.onrender.com/`
+- Screenshot path: `render-live-app.png`
 
 ## Steps
 
@@ -22,6 +22,10 @@ uvicorn app.main:app --host 0.0.0.0 --port $PORT
 - Optional guardrails:
   - `RAG_MAX_ANSWER_WORDS` (default `140`)
   - `RAG_MAX_OUTPUT_TOKENS` (default `220`)
+
+### Python version pin
+- Render may default to Python 3.14, which can fail with current `chromadb`/`pydantic.v1`.
+- This project pins Python to `3.11` using `.python-version` (and `PYTHON_VERSION` in `render.yaml`).
 
 ### Indexing
 The Chroma index is built during Render build in `render.yaml`, so startup remains fast and deterministic.
