@@ -25,6 +25,13 @@ Set your OpenAI API key in a `.env` file (copy from `.env.example`):
 OPENAI_API_KEY=sk-your-key-here
 ```
 
+Optional runtime guardrails:
+
+```env
+RAG_MAX_ANSWER_WORDS=140
+RAG_MAX_OUTPUT_TOKENS=220
+```
+
 ### Build index
 
 Build the vector index from policy documents:
@@ -56,3 +63,22 @@ With the server running, test the chat endpoint (PowerShell):
 ```powershell
 curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d "{\"question\": \"How many PTO days can I carry over?\"}"
 ```
+
+## Deploy to Render
+
+1. Push code to GitHub.
+2. In Render, create a new Web Service from the repo. `render.yaml` will be auto-detected.
+3. Set required env var:
+   - `OPENAI_API_KEY`
+4. Deploy once and verify:
+   - `/health` returns `{"status":"ok"}`
+   - `/` loads chat UI
+5. For auto-deploy from CI, set GitHub secret `RENDER_DEPLOY_HOOK_URL` (see `deployed.md`).
+
+## Reproducibility Notes
+
+- CI runs on Python 3.11 (`.github/workflows/ci.yml`).
+- Retrieval/generation behavior is stabilized by deterministic prompt rules, citation filtering, and post-response length clamping in `app/main.py`.
+- Evaluation uses a fixed 25-question set in `eval/questions.jsonl`.
+- For deterministic eval artifacts, use: `python -m eval.run_eval --overwrite`
+- For a manual quality audit sample, use: `python -m eval.export_manual_review --sample-size 10 --seed 42`

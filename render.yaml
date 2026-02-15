@@ -3,8 +3,11 @@ services:
     name: policy-rag-app
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python -m rag.ingest --rebuild && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: >
+      pip install -r requirements.txt &&
+      test -n "$OPENAI_API_KEY" &&
+      python -m rag.ingest --rebuild
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: OPENAI_API_KEY

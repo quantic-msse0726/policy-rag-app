@@ -1,9 +1,10 @@
 """
 Evaluation runner for Policy RAG /chat endpoint.
-Run: python -m eval.run_eval
+Run: python -m eval.run_eval [--overwrite]
 Requires: server running at http://127.0.0.1:8000
 """
 
+import argparse
 import json
 import re
 from datetime import datetime, timezone
@@ -18,8 +19,7 @@ QUESTIONS_PATH = EVAL_DIR / "questions.jsonl"
 RESULTS_PATH = EVAL_DIR / "results.jsonl"
 CHAT_URL = "http://127.0.0.1:8000/chat"
 
-# Regex for quoted phrases in answers (standard double quotes only)
-QUOTED_PHRASE_RE = re.compile(r'"([^"]+)"')
+INDEXED_QUOTE_RE = re.compile(r'Quote:\s*"([^"]+)"\s*\[(\d+)\]', re.IGNORECASE)
 
 
 def normalize_ws(s: str) -> str:
@@ -36,6 +36,14 @@ def extract_cited_indices(answer_text: str) -> list[int]:
     """Extract bracketed citation markers (e.g. [1], [2]). Returns sorted unique list."""
     matches = re.findall(r"\[(\d+)\]", answer_text)
     return sorted({int(m) for m in matches})
+
+
+def extract_indexed_quotes(answer_text: str) -> list[tuple[str, int]]:
+    """Extract quote text paired with citation marker index from 'Quote: \"...\" [n]' lines."""
+    out = []
+    for phrase, idx in INDEXED_QUOTE_RE.findall(answer_text):
+        out.append((phrase, int(idx)))
+    return out
 
 
 def load_questions() -> list[dict]:
@@ -83,32 +91,31 @@ def score_answerable(result: dict) -> tuple[bool, bool]:
     cited = extract_cited_indices(answer)
     has_citations = len(citations) > 0
     has_bracket_citations = len(cited) > 0
-    grounded_ok = has_citations and has_bracket_citations
+    citation_count_matches_markers = len(citations) == len(cited)
+    markers_in_range = all(1 <= i <= len(citations) for i in cited) if has_citations else False
+    grounded_ok = has_citations and has_bracket_citations and citation_count_matches_markers and markers_in_range
 
-    # citation_ok: grounded_ok AND at least one quoted phrase is exact substring in source
-    quoted_phrases = QUOTED_PHRASE_RE.findall(answer)
+    # citation_ok (stricter): grounded_ok AND quote marker must match the cited source text for that marker.
+    indexed_quotes = extract_indexed_quotes(answer)
     citation_ok = False
-    if grounded_ok and quoted_phrases:
-        sources = []
-        for c in citations:
-            if isinstance(c, dict):
-                t = c.get("text") or c.get("snippet")
-            else:
-                t = getattr(c, "text", None) or getattr(c, "snippet", "")
-            if t:
-                sources.append(t)
-        if not sources:
-            sources = snippets
-        for phrase in quoted_phrases:
+    if grounded_ok and indexed_quotes:
+        valid_quotes = 0
+        for phrase, idx in indexed_quotes:
             norm = _strip_trailing_punct(normalize_ws(phrase))
-            if len(norm) >= 20 or _word_count(norm) >= 5:
-                norm_srcs = [normalize_ws(src) for src in sources]
-                for norm_src in norm_srcs:
-                    if norm.lower() in norm_src.lower():
-                        citation_ok = True
-                        break
-            if citation_ok:
-                break
+            if len(norm) < 20 and _word_count(norm) < 5:
+                continue
+            source_text = ""
+            if 1 <= idx <= len(citations):
+                c = citations[idx - 1]
+                if isinstance(c, dict):
+                    source_text = c.get("text") or c.get("snippet") or ""
+                else:
+                    source_text = getattr(c, "text", None) or getattr(c, "snippet", "") or ""
+            if not source_text and 1 <= idx <= len(snippets):
+                source_text = snippets[idx - 1]
+            if source_text and norm.lower() in normalize_ws(source_text).lower():
+                valid_quotes += 1
+        citation_ok = valid_quotes > 0
 
     return grounded_ok, citation_ok
 
@@ -127,11 +134,14 @@ def score_unanswerable(result: dict) -> tuple[bool, bool]:
     return ok, ok
 
 
-def run_eval() -> None:
+def run_eval(overwrite: bool = False) -> None:
     """Run evaluation and append results to results.jsonl."""
     questions = load_questions()
     if not questions:
         raise SystemExit(f"No questions found in {QUESTIONS_PATH}")
+
+    if overwrite:
+        RESULTS_PATH.write_text("", encoding="utf-8")
 
     print(f"Evaluating {len(questions)} questions against {CHAT_URL}...")
 
@@ -204,7 +214,14 @@ def run_eval() -> None:
 
 
 def main() -> None:
-    run_eval()
+    parser = argparse.ArgumentParser(description="Run evaluation against local /chat endpoint.")
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite eval/results.jsonl before writing this run",
+    )
+    args = parser.parse_args()
+    run_eval(overwrite=args.overwrite)
 
 
 if __name__ == "__main__":

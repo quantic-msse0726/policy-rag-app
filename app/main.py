@@ -23,6 +23,8 @@ load_dotenv()
 
 app = FastAPI()
 templates = Jinja2Templates(directory=Path(__file__).resolve().parent / "templates")
+MAX_ANSWER_WORDS = int(os.environ.get("RAG_MAX_ANSWER_WORDS", "140"))
+MAX_OUTPUT_TOKENS = int(os.environ.get("RAG_MAX_OUTPUT_TOKENS", "220"))
 
 
 # --- Schemas ---
@@ -66,6 +68,14 @@ def extract_cited_indices(answer_text: str) -> list[int]:
             indices.append(n)
             seen.add(n)
     return sorted(indices)
+
+
+def truncate_words(text: str, max_words: int = MAX_ANSWER_WORDS) -> str:
+    """Truncate text to max_words, preserving existing whitespace-separated tokens."""
+    words = text.split()
+    if len(words) <= max_words:
+        return text.strip()
+    return " ".join(words[:max_words]).rstrip() + "..."
 
 
 # --- Routes ---
@@ -118,8 +128,10 @@ async def chat(req: ChatRequest):
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages,
+        max_tokens=MAX_OUTPUT_TOKENS,
     )
     answer = response.choices[0].message.content or ""
+    answer = truncate_words(answer, max_words=MAX_ANSWER_WORDS)
 
     # Deterministic quote injection: append Quote line if not already present
     has_quote_line = any(line.strip().startswith("Quote:") for line in answer.split("\n"))

@@ -27,7 +27,7 @@ def test_root_returns_chat_ui():
 
 def test_chat_unanswerable_returns_refusal():
     """POST /chat with unanswerable question returns refusal, empty citations/snippets."""
-    with patch("app.main.retrieve", return_value=[]):
+    with patch("app.main.index_ready", return_value=True), patch("app.main.retrieve", return_value=[]):
         resp = client.post(
             "/chat",
             json={"question": "What is today's cafeteria menu?"},
