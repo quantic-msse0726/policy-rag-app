@@ -18,6 +18,13 @@ def test_health():
     assert resp.json() == {"status": "ok"}
 
 
+def test_root_returns_chat_ui():
+    """GET / returns HTML with Policy RAG Chat."""
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert "Policy RAG Chat" in resp.text
+
+
 def test_chat_unanswerable_returns_refusal():
     """POST /chat with unanswerable question returns refusal, empty citations/snippets."""
     with patch("app.main.retrieve", return_value=[]):

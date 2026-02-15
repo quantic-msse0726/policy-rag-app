@@ -1,19 +1,28 @@
 import os
 import re
 import time
+from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi.responses import PlainTextResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
 from openai import OpenAI
 from pydantic import BaseModel, Field, field_validator
 
 from rag.prompts import build_messages
-from rag.retriever import _extract_keywords, pick_verbatim_quote, retrieve, should_refuse
+from rag.retriever import (
+    _extract_keywords,
+    index_ready,
+    pick_verbatim_quote,
+    retrieve,
+    should_refuse,
+)
 
 load_dotenv()
 
 app = FastAPI()
+templates = Jinja2Templates(directory=Path(__file__).resolve().parent / "templates")
 
 
 # --- Schemas ---
@@ -67,14 +76,23 @@ async def health():
     return {"status": "ok"}
 
 
-@app.get("/", response_class=PlainTextResponse)
-async def root():
-    return "Policy RAG App is running"
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    return templates.TemplateResponse(request, "index.html")
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     start = time.perf_counter()
+
+    if not index_ready():
+        latency_ms = int((time.perf_counter() - start) * 1000)
+        return ChatResponse(
+            answer="Index not built. Run: python -m rag.ingest --rebuild",
+            citations=[],
+            snippets=[],
+            latency_ms=latency_ms,
+        )
 
     # Retrieve
     contexts = retrieve(req.question)

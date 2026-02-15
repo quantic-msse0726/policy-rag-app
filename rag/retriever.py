@@ -183,6 +183,11 @@ def _embed_query(query: str) -> list[float]:
     return resp.data[0].embedding
 
 
+def index_ready(persist_dir: str | Path = DEFAULT_PERSIST_DIR) -> bool:
+    """True if the Chroma index directory exists (index has been built)."""
+    return Path(persist_dir).exists()
+
+
 def get_chroma_collection(
     persist_dir: str | Path = DEFAULT_PERSIST_DIR,
     name: str = COLLECTION_NAME,
