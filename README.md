@@ -1,27 +1,80 @@
-# policy-rag-app
-End-to-end RAG system for policy question answering. Implements document ingestion, chunking, embeddings, vector search, citation-aware prompting, guardrails, evaluation pipeline, and CI/CD.
+# Policy RAG App
+
+End-to-end Retrieval-Augmented Generation (RAG) application for answering company policy questions with citations.
+
+## Project Summary
+
+This project implements the full assignment scope:
+
+- Multi-format policy ingestion (`.md`, `.txt`, `.html`, `.pdf`)
+- Chunking + embedding + vector indexing (Chroma)
+- Top-k retrieval with lightweight reranking
+- Guardrailed generation with citation markers and refusal behavior
+- Web application with:
+  - `/` chat UI
+  - `/chat` JSON API
+  - `/health` health endpoint
+- Automated evaluation (groundedness, citation accuracy, latency)
+- CI checks and optional Render deploy hook
 
 ## Corpus
 
-The `data/policies/` directory contains a synthetic company policy corpus (18+ files, ~50 pages) covering:
+Policy corpus is in `data/policies/`.
 
-- **Formats**: Markdown (.md), plain text (.txt), HTML (.html), and PDF (.pdf)
-- **Topics**: PTO, remote work, expenses, information security, acceptable use, code of conduct, diversity & inclusion, performance review, onboarding, termination, benefits, equipment, confidentiality, harassment prevention
-- **Legal use**: All content is synthetically authored for this project and may be freely used and redistributed.
+- Size: 19 documents, ~50 pages, ~21.6k tokens, ~99 chunks
+- Topics: PTO, remote work, expenses, information security, acceptable use, code of conduct, D&I, performance, onboarding, termination, benefits, equipment, confidentiality, harassment reporting
+- Legal status: synthetic content authored for this project and safe to include in repo
 
-To regenerate the sample PDF: `python scripts/generate_sample_pdf.py`
+To regenerate the sample PDF document:
 
-## Evaluation
-
-Success metrics (information quality and system performance) are defined in [EVALUATION.md](EVALUATION.md), including groundedness, citation accuracy, and latency targets.
-
-## Setup
-
-### Environment
-
-Set your OpenAI API key in a `.env` file (copy from `.env.example`):
-
+```bash
+python scripts/generate_sample_pdf.py
 ```
+
+## Tech Stack
+
+- Backend: FastAPI, Uvicorn
+- LLM/Embeddings: OpenAI API
+- Vector store: Chroma (local persistent)
+- Parsing: BeautifulSoup (HTML), pypdf (PDF)
+- Evaluation: Python scripts + JSONL artifacts
+- CI/CD: GitHub Actions + optional Render deploy hook
+
+## Repository Layout
+
+- `app/main.py`: FastAPI app and `/chat` orchestration
+- `app/templates/index.html`: web chat UI
+- `rag/ingest.py`: document parsing, chunking, embedding, indexing
+- `rag/retriever.py`: retrieval, reranking, refusal heuristics
+- `rag/prompts.py`: prompt construction
+- `eval/run_eval.py`: automated evaluation runner
+- `eval/export_manual_review.py`: deterministic manual-review sample export
+- `eval/manual_adjudication.md`: human adjudication rubric
+- `.github/workflows/ci.yml`: CI pipeline and optional deploy hook
+- `render.yaml`: Render service configuration
+
+## Local Setup
+
+### 1) Create and activate virtual environment
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+. .\.venv\Scripts\Activate.ps1
+```
+
+### 2) Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3) Configure environment
+
+Copy `.env.example` to `.env` and set:
+
+```env
 OPENAI_API_KEY=sk-your-key-here
 ```
 
@@ -32,53 +85,155 @@ RAG_MAX_ANSWER_WORDS=140
 RAG_MAX_OUTPUT_TOKENS=220
 ```
 
-### Build index
-
-Build the vector index from policy documents:
+### 4) Build the vector index
 
 ```bash
 python -m rag.ingest --rebuild
 ```
 
-Use `--rebuild` to delete the existing index and re-index from scratch. Without it, new documents are added to the existing index.
+### 5) Run tests
 
-### Run server
+```bash
+python -m pytest -q
+```
+
+### 6) Start server
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-### Test retrieval
+Open:
 
-Verify retrieval (uses OpenAI for query embedding; requires index and OPENAI_API_KEY):
+- UI: `http://127.0.0.1:8000/`
+- Health: `http://127.0.0.1:8000/health`
 
-```bash
-python -m rag.query "PTO carryover"
+## API Usage
+
+### POST `/chat`
+
+Request body:
+
+```json
+{ "question": "How many PTO days can I carry over?" }
 ```
 
-### Test chat
+Returns:
 
-With the server running, test the chat endpoint (PowerShell):
+- `answer`
+- `citations[]` with `doc_id`, `title`, `section`, `snippet`
+- `snippets[]`
+- `latency_ms`
+
+PowerShell example:
 
 ```powershell
 curl -X POST http://127.0.0.1:8000/chat -H "Content-Type: application/json" -d "{\"question\": \"How many PTO days can I carry over?\"}"
 ```
 
-## Deploy to Render
+## Evaluation
 
-1. Push code to GitHub.
-2. In Render, create a new Web Service from the repo. `render.yaml` will be auto-detected.
-3. Set required env var:
-   - `OPENAI_API_KEY`
-4. Deploy once and verify:
-   - `/health` returns `{"status":"ok"}`
-   - `/` loads chat UI
-5. For auto-deploy from CI, set GitHub secret `RENDER_DEPLOY_HOOK_URL` (see `deployed.md`).
+### Automated metrics
+
+Run deterministic evaluation:
+
+```bash
+python -m eval.run_eval --overwrite
+```
+
+Produces/updates:
+
+- `eval/results.jsonl`
+
+Reported metrics:
+
+- Groundedness %
+- Citation accuracy %
+- Latency p50 / p95
+
+### Manual audit add-on
+
+Export deterministic sample for human review:
+
+```bash
+python -m eval.export_manual_review --sample-size 10 --seed 42
+```
+
+Then adjudicate with:
+
+- `eval/manual_review_sample.csv`
+- `eval/manual_adjudication.md`
+
+## Deployment (Render)
+
+This repo includes `render.yaml`.
+
+### Render settings (if configuring manually)
+
+- Runtime: `Python 3`
+- Python version: `3.11.x` (required for current `chromadb` compatibility)
+- Branch: `main`
+- Root directory: blank
+- Build command:
+
+```bash
+pip install -r requirements.txt && test -n "$OPENAI_API_KEY" && python -m rag.ingest --rebuild
+```
+
+- Start command:
+
+```bash
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+- Health check path: `/health`
+- Required env var: `OPENAI_API_KEY`
+
+If Render defaults to Python 3.14+, deploy can fail in `chromadb`/`pydantic.v1`. This repo pins Python to 3.11 via `render.yaml` and `runtime.txt`.
+
+After deploy, validate:
+
+1. `https://<your-service>.onrender.com/health`
+2. `https://<your-service>.onrender.com/`
+3. Ask a sample question and confirm citations/snippets in response
+
+See `deployed.md` for live URL and deploy evidence fields.
+
+## CI/CD
+
+Workflow: `.github/workflows/ci.yml`
+
+On push/PR:
+
+- Install dependencies
+- Compile modules
+- Run tests (`python -m pytest -q`)
+
+Optional deploy-on-main:
+
+- If secret `RENDER_DEPLOY_HOOK_URL` is configured, CI triggers Render deploy hook after tests pass on `main`.
 
 ## Reproducibility Notes
 
-- CI runs on Python 3.11 (`.github/workflows/ci.yml`).
-- Retrieval/generation behavior is stabilized by deterministic prompt rules, citation filtering, and post-response length clamping in `app/main.py`.
-- Evaluation uses a fixed 25-question set in `eval/questions.jsonl`.
-- For deterministic eval artifacts, use: `python -m eval.run_eval --overwrite`
-- For a manual quality audit sample, use: `python -m eval.export_manual_review --sample-size 10 --seed 42`
+- Python 3.11 in CI
+- Fixed evaluation set (`eval/questions.jsonl`)
+- Deterministic evaluation output mode (`--overwrite`)
+- Explicit output-length guardrails in app runtime
+
+## Submission Artifacts
+
+- Code and docs: this repository
+- Setup and run guide: `README.md`
+- Design and evaluation summary: `design-and-evaluation.md`
+- Metric definitions: `EVALUATION.md`
+- AI tooling disclosure: `ai-tooling.md`
+- Deployment notes: `deployed.md`
+
+## Troubleshooting
+
+- Error: `Index not built` on `/chat`
+  - Run: `python -m rag.ingest --rebuild`
+- CI failure due to import paths
+  - Use: `python -m pytest -q` (already configured)
+- Render health check failing
+  - Ensure health path is `/health` and start command uses Uvicorn with `$PORT`
